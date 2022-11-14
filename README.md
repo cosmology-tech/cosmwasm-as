@@ -23,6 +23,7 @@ This repository contains a sample implementation of several CosmWasm smart contr
 
 ```bash
 $ git clone https://github.com/terran-one/cosmwasm-as
+$ cd cosmwasm-as
 ```
 
 2. Install the dependencies. We used `yarn`, but you can use `npm` as well.
