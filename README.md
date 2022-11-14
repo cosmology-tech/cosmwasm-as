@@ -43,36 +43,6 @@ $ yarn asbuild
 $ yarn test
 ```
 
-
-## Background
-
-[CosmWasm](https://cosmwasm.com) is a smart contract framework developed and maintained by [Confio](https://confio.io), designed to enable smart contracts on [Cosmos SDK](https://v1.cosmos.network/sdk)-based blockchains such as Terra, Juno, Osmosis, Injective (to name a few).
-CosmWasm smart contracts are powered by [WebAssembly](https://webassembly.org/) ("Wasm"), a modern binary format and web standard focused on safety, portability and performance.
-
-One exciting benefit of adopting CosmWasm is the promise of broad programming language support.
-WebAssembly is quickly gaining traction as **the web's preferred standard** for the future of safe portable execution, and a number of languages have already or are starting to add support for Wasm as a compilation target.
-
-### Current state of polyglot CosmWasm
-
-At the time of writing (Nov 2022), the only real option for writing CosmWasm smart contracts is Rust.
-While there have been some experimental efforts from the Confio team and other contributors to create SDKs in other languages like [Golang](https://github.com/cosmwasm/cosmwasm-go) and [AssemblyScript](https://github.com/CosmWasm/cosmwasm/tree/assemblyscript/contracts/assemblyscript-poc)*,
-these have mostly not been maintained due to a lack of community.
-
-### What languages work best with CosmWasm?
-
-Although many languages claim to support WebAssembly, there are only a few which actually make decent candidates for usage with CosmWasm.
-First, there should be a distinction between languages that can *run in* Wasm, and those that can *compile to* Wasm.
-
-In the former, it is the language's runtime which gets compiled to Wasm, and not programs that are written in the language.
-Consider how Python currently supports Wasm -- essentially, an entire Python interpreter is created inside the Wasm VM,
-and your Python code (`.py`) is read and executed by that process. As you can imagine, the extra layer of emulation adds significant overhead --
-without even considering that a smart contract's execution gets replicated thousands of times of every full node.
-
-For CosmWasm, we desire a language with the following properties:
-
-- static & strongly-typed
-- minimal runtime
-
 ## Project Structure
 
 This project was created with the [`asbuild`](https://github.com/AssemblyScript/asbuild) tool and follows a directory organization similar to other AssemblyScript projects.
@@ -99,65 +69,96 @@ cosmwasm-as
 
 ## Architecture
 
-A *CosmWasm contract* is a Wasm module that adheres to the following structure:
+A *CosmWasm contract* is a Wasm module that adheres to the following structure[^1].
+
+[^1]: Discussed in further detail on the [CosmWasm official repository README](https://github.com/CosmWasm/cosmwasm/blob/007fd626c67945fc548a99b6ba06aefcd0bb4195/README.md)
 
 ### Wasm Imports
 
-```ruby
-(module
-  ...
-  (import "env" "db_read" (func $_ (param i32) (result i32)))
-  (import "env" "db_write" (func $_ (param i32 i32)))
-  (import "env" "db_scan" (func $_ (param i32)))
-  (import "env" "db_next" (func $_ (param i32)))
-  (import "env" "addr_humanize" (func $_ (param i32)))
-  (import "env" "addr_canonicalize" (func $_ (param i32)))
-  (import "env" "secp256k1_verify" (func $_ (param i32)))
-  (import "env" "secp256k1_recover_pubkey" (func $_ (param i32)))
-  (import "env" "ed25519_verify" (func $_ (param i32)))
-  (import "env" "ed25519_batch_verify" (func $_ (param i32)))
-  (import "env" "debug" (func $_ (param i32)))
-  (import "env" "query_chain" (func $_ (param i32)))
-  (import "env" "abort" (func $_ (param i32)))
-  ...
-)
+<details><summary>Imports provided by CosmWasm VM</summary>
+
+
+```rust
+extern "C" {
+    #[cfg(feature = "abort")]
+    fn abort(source_ptr: u32);
+
+    fn db_read(key: u32) -> u32;
+    fn db_write(key: u32, value: u32);
+    fn db_remove(key: u32);
+
+    #[cfg(feature = "iterator")]
+    fn db_scan(start_ptr: u32, end_ptr: u32, order: i32) -> u32;
+    #[cfg(feature = "iterator")]
+    fn db_next(iterator_id: u32) -> u32;
+
+    fn addr_validate(source_ptr: u32) -> u32;
+    fn addr_canonicalize(source_ptr: u32, destination_ptr: u32) -> u32;
+    fn addr_humanize(source_ptr: u32, destination_ptr: u32) -> u32;
+
+    fn secp256k1_verify(message_hash_ptr: u32, signature_ptr: u32, public_key_ptr: u32) -> u32;
+    fn secp256k1_recover_pubkey(
+        message_hash_ptr: u32,
+        signature_ptr: u32,
+        recovery_param: u32,
+    ) -> u64;
+
+    fn ed25519_verify(message_ptr: u32, signature_ptr: u32, public_key_ptr: u32) -> u32;
+    fn ed25519_batch_verify(messages_ptr: u32, signatures_ptr: u32, public_keys_ptr: u32) -> u32;
+
+    fn debug(source_ptr: u32);
+
+    fn query_chain(request: u32) -> u32;
+}
 ```
 
-### Wasm Exports
-
-(import )
-@external("env", "db_read")
-export declare function db_read(keyPtr: usize): usize;
-
-@external("env", "db_write")
-export declare function db_write(keyPtr: usize, valuePtr: usize): void;
-
-@external("env", "db_remove")
-export declare function db_remove(keyPtr: usize): void;
-// export declare function db_scan(messagePtr: usize): void;
-// export declare function db_next(messagePtr: usize): void;
-// export declare function addr_humanize(sourcePtr: usize, destPtr: usize): usize;
-// export declare function addr_canonicalize(sourcePtr: usize, destPtr: usize): usize;
-// export declare function addr_validate(sourcePtr: usize): usize;
-// export declare function secp256k1_verify(messagePtr: usize): void;
-// export declare function secp256k1_recover_pubkey(messagePtr: usize): void;
-// export declare function ed25519_verify(messagePtr: usize): void;
-// export declare function ed25519_batch_verify(messagePtr: usize): void;
-// export declare function debug(messagePtr: usize): void;
-// export declare function query_chain(messagePtr: usize): void;
-// export declare function abort(messagePtr: usize): void;
-
-```
-
+</details>
 
 ### Wasm Exports
 
 
+<details><summary>Exports expected by CosmWasm VM</summary>
 
-## Prior Art
 
-- sdf
-- sdf
+##### Required
+
+```rust
+extern "C" {
+	fn allocate(size: usize) -> u32;
+	fn deallocate(pointer: u32);
+	fn instantiate(env_ptr: u32, info_ptr: u32, msg_ptr: u32) -> u32;
+
+	// TODO: implement
+
+	// signal for 1.0 compatibility
+	fn interface_version_8() -> ();
+}
+```
+
+
+#### Optional
+
+```rust
+extern "C" {
+	fn execute(env_ptr: u32, info_ptr: u32, msg_ptr: u32) -> u32;
+	fn query(env_ptr: u32, msg_ptr: u32) -> u32;
+
+	// TODO: implement
+	fn migrate(env_ptr: u32, msg_ptr: u32) -> u32;
+	fn reply(env_ptr: u32, msg_ptr: u32) -> u32;
+	fn sudo(env_ptr: u32, msg_ptr: u32) -> u32;
+	fn ibc_channel_open(env_ptr: u32, msg_ptr: u32) -> u32;
+	fn ibc_channel_connect(env_ptr: u32, msg_ptr: u32) -> u32;
+	fn ibc_channel_close(env_ptr: u32, msg_ptr: u32) -> u32;
+	fn ibc_packet_receive(env_ptr: u32, msg_ptr: u32) -> u32;
+	fn ibc_packet_ack(env_ptr: u32, msg_ptr: u32) -> u32;
+	fn ibc_packet_timeout(env_ptr: u32, msg_ptr: u32) -> u32;
+}
+```
+
+
+</details>
+
 
 ## Copyright
 
