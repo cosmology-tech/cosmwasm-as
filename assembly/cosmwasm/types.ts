@@ -165,7 +165,7 @@ export class Binary {
 
 	__JSON_Serialize(): string {
 		let stringifiedBzUtf8 = Uint8Array.wrap(String.UTF8.encode(this.value));
-		return encode(stringifiedBzUtf8);
+		return JSON.stringify(encode(stringifiedBzUtf8));
 	}
 }
 

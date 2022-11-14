@@ -18,7 +18,7 @@ export function do_instantiate(env: Env, info: Info, msg: InstantiateMsg): Resul
 		count: msg.count,
 	});
 
-	let res = new Response();
+	let res = Response.new_();
 	return Ok(res);
 }
 

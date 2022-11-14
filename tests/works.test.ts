@@ -52,8 +52,6 @@ describe("cw-as", () => {
 		res = vm.execute(env, info1, {increment:{}});
 		console.log(res.json);
 		res = vm.query(env, {get_count:{}});
-
-		let parsedRes = Buffer.from(res.str, 'base64').toString();
-		console.log(parsedRes);
+		console.log(res.str);
 	})
 })

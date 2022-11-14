@@ -11,9 +11,14 @@ class ErrorRes {
 	error: string;
 }
 
+@json
+class OkRes<T> {
+	ok: T;
+}
+
 function stringifyResult<T>(res: Result<T, string>): string {
 	if (res.isOk) {
-		return JSON.stringify<T>(res.unwrap());
+		return JSON.stringify<OkRes<T>>({ ok: res.unwrap() });
 	} else {
 		return JSON.stringify<ErrorRes>({ error: res.unwrapErr() });
 	}
