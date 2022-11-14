@@ -9,9 +9,3 @@ export {
 	allocate,
 	deallocate
 } from './cosmwasm/exports';
-
-export {
-	db_read,
-	db_write,
-	db_remove
-} from './cosmwasm/imports';
