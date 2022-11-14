@@ -1,0 +1,13 @@
+node_modules/
+*debug.log
+dist/
+build/
+raw/
+.history
+*.backup
+.vscode
+.idea
+cli/index.generated.js
+src/diagnosticMessages.generated.ts
+coverage/
+.idea/
