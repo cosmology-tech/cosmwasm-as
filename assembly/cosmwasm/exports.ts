@@ -79,3 +79,4 @@ export function deallocate(regionPtr: usize): void {
 	heap.free(regionPtr);
 }
 
+export function interface_version_8(): void {}

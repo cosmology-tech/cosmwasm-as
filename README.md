@@ -8,8 +8,14 @@
 
 <!-- TOC -->
 * [CosmWasm in AssemblyScript](#cosmwasm-in-assemblyscript)
-	* [Background](#background)
-	* [Quickstart](#quickstart)
+  * [Quickstart](#quickstart)
+  * [Project Structure](#project-structure)
+  * [Architecture](#architecture)
+    * [Wasm Imports](#wasm-imports)
+    * [Wasm Exports](#wasm-exports)
+        * [Required](#required)
+      * [Optional](#optional)
+  * [Copyright](#copyright)
 <!-- TOC -->
 
 **NOTE: This is purely for study and experimentation. Confio has expressed doubt regarding AssemblyScript's viability as a serious CosmWasm language due to concerns about security.**
@@ -128,7 +134,7 @@ extern "C" {
 	fn deallocate(pointer: u32);
 	fn instantiate(env_ptr: u32, info_ptr: u32, msg_ptr: u32) -> u32;
 
-	// TODO: implement
+	// TODO: implement the following
 
 	// signal for 1.0 compatibility
 	fn interface_version_8() -> ();
@@ -143,7 +149,7 @@ extern "C" {
 	fn execute(env_ptr: u32, info_ptr: u32, msg_ptr: u32) -> u32;
 	fn query(env_ptr: u32, msg_ptr: u32) -> u32;
 
-	// TODO: implement
+	// TODO: the following have yet to be implemented
 	fn migrate(env_ptr: u32, msg_ptr: u32) -> u32;
 	fn reply(env_ptr: u32, msg_ptr: u32) -> u32;
 	fn sudo(env_ptr: u32, msg_ptr: u32) -> u32;

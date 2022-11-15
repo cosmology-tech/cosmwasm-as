@@ -7,5 +7,6 @@ export {
 	execute,
 	query,
 	allocate,
-	deallocate
+	deallocate,
+	interface_version_8
 } from './cosmwasm/exports';
