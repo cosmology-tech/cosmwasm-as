@@ -1,4 +1,4 @@
-# CosmWasm in AssemblyScript
+# CosmWasm smart contracts in AssemblyScript
 
 <div align="center">
 
