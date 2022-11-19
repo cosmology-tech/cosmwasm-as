@@ -11,3 +11,4 @@ cli/index.generated.js
 src/diagnosticMessages.generated.ts
 coverage/
 .idea/
+.DS_Store
