@@ -3,6 +3,9 @@
 // To program your contract, you should modify code in the `./contract` folder.
 
 // Required Wasm exports
+import { Region } from "./cosmwasm";
+import { abort } from './cosmwasm/imports';
+
 export {
   interface_version_8,
   instantiate,
@@ -15,8 +18,6 @@ export {
   execute,
   query,
 } from './cosmwasm/exports';
-
-import { abort } from './cosmwasm/imports';
 
 export function logAndCrash(
     message: string | null,
@@ -37,6 +38,8 @@ export function logAndCrash(
       columnNumber.toString() +
       ")";
 
-  abort(msg.length);
+  // Allocate msg
+  const msgPtr = Region.allocateAndWriteStr(msg);
+  abort(msgPtr.ptr);
   unreachable(); // crash hard
 }
