@@ -22,7 +22,7 @@
 
 This repository contains a sample implementation of several CosmWasm smart contracts written in AssemblyScript. We test the behavior of our contracts against [`cosmwasm-vm-js`](https://github.com/terran-one/cosmwasm-vm-js), a JavaScript-based runtime for CosmWasm that is convenient to instrument and run locally.
 
-## Uploaded Contracts
+### Uploaded Contracts
 
 The AssemblyScript contract shown in this repository are uploaded to the following addresses:
 
