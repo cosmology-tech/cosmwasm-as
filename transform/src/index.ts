@@ -18,27 +18,39 @@ import {
 import {ASTBuilder} from "visitor-as/dist/astBuilder.js";
 import {compileString} from "assemblyscript/dist/asc";
 
-import {getName, toString} from "visitor-as/dist/utils.js";
+import {getName, hasDecorator, toString} from "visitor-as/dist/utils.js";
 import {BaseTransformVisitor, Collection, SimpleParser} from "visitor-as/dist/index.js";
+import * as ts from "typescript";
 
 class ContractDecorator extends ClassDecorator {
+
+	public queryStmts: string[] = [];
+
 	get name(): string {
 		return "contract";
 	}
 
 	visitClassDeclaration(node: ClassDeclaration): void {
-		console.log("visitClassDeclaration", node.name);
-		super.visit(node.members);
-		console.log(ASTBuilder.build(node))
+		this.visit(node.members);
+
+		let queryFunction = `
+		__query(): string {
+		  let result = "";
+		  ${this.queryStmts.join("")}
+		  return result;
+		}
+		`;
+		node.members.push(SimpleParser.parseClassMember(queryFunction, node));
+		console.log(toString(node));
 	}
 
 	visitFieldDeclaration(node: FieldDeclaration): void {
-		console.log("visitFieldDeclaration", node.name);
 	}
 
 	visitMethodDeclaration(node: MethodDeclaration): void {
-		node.signature.returnType = new NamedTypeNode(new TypeName(new IdentifierExpression("Hello", false, node.range), null, node.range), null, false, node.range);
-		console.log(ASTBuilder.build(node));
+		if(hasDecorator(node, "query")) {
+			this.queryStmts.push(`result += "${getName(node)}";`);
+		}
 	}
 }
 

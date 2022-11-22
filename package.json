@@ -13,7 +13,7 @@
     "minimist": "^1.2.7",
     "ts-jest": "^29.0.3",
     "ts-node": "^10.9.1",
-    "typescript": "^4.8.4"
+    "typescript": "^4.9.3"
   },
   "exports": {
     ".": {
@@ -26,7 +26,7 @@
     "asbuild:debug": "asc assembly/index.ts --target debug --disable bulk-memory --sourceMap --runtime stub --exportStart --use abort=assembly/index/logAndCrash --debug && node util/rewrite-wasm.js build/debug.wasm",
     "asbuild:release": "asc assembly/index.ts --target release --disable bulk-memory --sourceMap --runtime stub --exportStart --use abort=assembly/index/logAndCrash --debug && node util/rewrite-wasm.js build/release.wasm --optimize=1",
     "asbuild": "npm run asbuild:debug && npm run asbuild:release",
-	"dbg": "tsc -p transform && yarn asbuild:debug",
+    "dbg": "tsc -p transform && yarn asbuild:debug",
     "test": "jest",
     "start": "npx serve ."
   },
