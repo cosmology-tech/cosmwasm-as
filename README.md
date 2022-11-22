@@ -131,6 +131,9 @@ extern "C" {
 
 </details>
 
+We declare them inside `assembly/cosmwasm/imports` and use where needed inside our library code.
+Note that since these are quite low level, the end-user consuming the `cosmwasm-as` API probably won't need to import them directly.
+
 ### Wasm Exports
 
 
@@ -171,6 +174,74 @@ extern "C" {
 
 
 </details>
+
+This is the main "meat" that is relevant to our implementation, which must get explicitly exported by `assembly/index.ts` to get picked up by the AssemblyScript compiler.
+Their implementation resides in `assembly/cosmwasm/exports.ts` -- we simply re-export them in our `assembly/index.ts`:
+
+
+```ts
+// assembly/index.ts
+
+// Required Wasm exports
+export {
+  interface_version_8,
+  instantiate,
+  allocate,
+  deallocate
+} from './cosmwasm/exports';
+
+// Optional Wasm exports
+export {
+  execute,
+  query,
+  ...
+} from './cosmwasm/exports';
+```
+
+### Build Changes
+
+We altered the build script slightly to make it work with CosmWasm.
+
+#### Step 1: Compile AssemblyScript to Wasm
+
+```diff
+asc assembly/index.ts
+	--target debug
+	--sourceMap
+	--debug
++	--disable bulk-memory
++	--use abort=assembly/index/logAndCrash
++	--runtime stub
++	--exportStart
+```
+
+A couple changes here:
+
+##### 1. `--disable bulk-memory`
+
+If not set, Wasmer will complain about missing 0xFC opcode.
+
+##### 2. `--use abort=assembly/index/logAndCrash`
+
+AssemblyScript usually requires the host environment to supply `env`.`abort`.
+However, CosmWasm supplies a different function with the same name, so we rewire it according to [Simon Warta's example]().
+
+##### 3. `--runtime stub`
+
+To disable garbage collection (GC).
+
+##### 4. `--exportStart`
+
+Export the `(start ...)` instruction rather than have it being implicity called.
+
+#### Step 2: Rewrite binary
+
+We authored a tool using [`Binaryen`](https://github.com/bytecode-alliance/binaryen) to remove the `(start ...)`  instruction and replace it by prepending it to each entrypoint's function body.
+
+```bash
+node util/rewrite-wasm [--optimize=1] build/debug.wasm
+```
+
 
 
 ## Copyright
