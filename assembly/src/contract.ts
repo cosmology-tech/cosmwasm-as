@@ -13,7 +13,7 @@ function Err(msg: string): Result<Response, string> {
 
 export function do_instantiate(env: Env, info: Info, msg: InstantiateMsg): Result<Response, string> {
 
-	STATE.save({
+	STATE().save({
 		owner: info.sender,
 		count: msg.count,
 	});
@@ -33,13 +33,13 @@ export function do_execute(env: Env, info: Info, msg: ExecuteMsg): Result<Respon
 }
 
 function try_increment(env: Env, info: Info): Result<Response, string> {
-	let _state = STATE.load();
+	let _state = STATE().load();
 	if (_state.isErr) {
 		return Err(_state.unwrapErr());
 	}
 	let state = _state.unwrap();
 	state.count += 1;
-	let _save = STATE.save(state);
+	let _save = STATE().save(state);
 	if (_save.isErr) {
 		return Err(_save.unwrapErr());
 	}
@@ -48,7 +48,7 @@ function try_increment(env: Env, info: Info): Result<Response, string> {
 }
 
 function try_reset(env: Env, info: Info, count: i32): Result<Response, string> {
-	let _state = STATE.load();
+	let _state = STATE().load();
 	if (_state.isErr) {
 		return Err(_state.unwrapErr());
 	}
@@ -58,7 +58,7 @@ function try_reset(env: Env, info: Info, count: i32): Result<Response, string> {
 	}
 
 	state.count = count;
-	let _save = STATE.save(state);
+	let _save = STATE().save(state);
 	if (_save.isErr) {
 		return Err(_save.unwrapErr());
 	}
@@ -78,7 +78,7 @@ export function do_query(env: Env, msg: QueryMsg): Result<Binary, string> {
 }
 
 export function query_count(): Result<CountResponse, string> {
-	let _state = STATE.load();
+	let _state = STATE().load();
 	if (_state.isErr) {
 		return Result.Err<CountResponse, string>(_state.unwrapErr());
 	}

@@ -7,4 +7,16 @@ export class State {
 	count: i32;
 }
 
-export const STATE = new Item<State>("state");
+/**
+ * Although it would be more similar to CosmWasm to do:
+ *
+ * ```ts
+ * export const STATE = new Item<State>("state");
+ * ```
+ *
+ * Wasmer doesn't like it, so we have to do this:
+ */
+
+export function STATE(): Item<State> {
+	return new Item<State>("state");
+}
