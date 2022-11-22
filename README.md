@@ -198,6 +198,19 @@ export {
 } from './cosmwasm/exports';
 ```
 
+### Passing data to/from CosmWasm VM (host environment)
+
+The CosmWasm VM <> contract data protocol is quite simple:
+
+- VM to contract: values are serialized to JSON and loaded into a pointer into Wasm linear memory, requested by calling `allocate`.
+- Contract to VM: values are serialized to JSON and a pointer to a `Region` struct describing the section of  VM memory is returned to the VM.
+
+The "start"-ing `Region` struct consists of only 3 members:
+
+- `offset`  - the underlying pointer
+- `capacity` - max size of encoded object
+- `length` -  current length of data stored in memory
+
 ### Build Changes
 
 We altered the build script slightly to make it work with CosmWasm.
