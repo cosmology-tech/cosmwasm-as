@@ -133,10 +133,6 @@ extern "C" {
 	fn allocate(size: usize) -> u32;
 	fn deallocate(pointer: u32);
 	fn instantiate(env_ptr: u32, info_ptr: u32, msg_ptr: u32) -> u32;
-
-	// TODO: implement the following
-
-	// signal for 1.0 compatibility
 	fn interface_version_8() -> ();
 }
 ```

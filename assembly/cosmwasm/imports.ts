@@ -17,4 +17,5 @@ export declare function db_remove(keyPtr: usize): void;
 // export declare function ed25519_batch_verify(messagePtr: usize): void;
 // export declare function debug(messagePtr: usize): void;
 // export declare function query_chain(messagePtr: usize): void;
-// export declare function abort(messagePtr: usize): void;
+@external("env", "abort")
+export declare function abort(messagePtr: usize): void;
