@@ -224,7 +224,7 @@ If not set, Wasmer will complain about missing 0xFC opcode.
 ##### 2. `--use abort=assembly/index/logAndCrash`
 
 AssemblyScript usually requires the host environment to supply `env`.`abort`.
-However, CosmWasm supplies a different function with the same name, so we rewire it according to [Simon Warta's example]().
+However, CosmWasm supplies a different function with the same name, so we rewire it according to [Simon Warta's example](https://github.com/CosmWasm/cosmwasm/blob/1a356a249c7f0fc655c9070776775a765ab7da2f/contracts/assemblyscript-poc/contract/src/cosmwasm-std/cosmwasm.ts#L106-L126).
 
 ##### 3. `--runtime stub`
 
