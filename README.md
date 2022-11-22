@@ -22,6 +22,13 @@
 
 This repository contains a sample implementation of several CosmWasm smart contracts written in AssemblyScript. We test the behavior of our contracts against [`cosmwasm-vm-js`](https://github.com/terran-one/cosmwasm-vm-js), a JavaScript-based runtime for CosmWasm that is convenient to instrument and run locally.
 
+## Uploaded Contracts
+
+The AssemblyScript contract shown in this repository are uploaded to the following addresses:
+
+- Terra Testnet - `pisco-1`: *(pending upload)*
+- Juno Testnet - `uni-5`: `juno13qfr40ewq0ng63ukgxm4xxue6uv4u5d65xpqes3srpq39jjux4hqeqg484`
+
 
 ## Quickstart
 
@@ -39,8 +46,10 @@ $ yarn
 
 3. Run `asbuild` to build the AssemblyScript Wasm binaries.
 
+**NOTE:** This compiles using AssemblyScript, then rewrites it using `util/rewrite-wasm.js`, which uses Binaryen.
+
 ```bash
-$ yarn asbuild
+$ yarn build
 ```
 
 4. Run the tests.
@@ -66,6 +75,8 @@ cosmwasm-as
     │   │   ├── msg.ts -- `msg.rs` analog
     │   │   └── state.ts -- `state.rs` analog
     │   └── index.ts -- directs compiler on assembling Wasm module -- `lib.rs` analog
+    │── util/ -- Various build utilities
+    │   └── rewrite-wasm.js -- Tool for rewriting Wasm binaries to work with CosmWasm
     ├── build/
     │   ├── debug.wasm -- Wasm binary: with debug symbols
     │   └── release.wasm -- Wasm binary: production-optimized
