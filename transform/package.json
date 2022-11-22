@@ -1,0 +1,32 @@
+{
+    "name": "@terran-one/cwscript-transform",
+    "version": "0.5.4",
+    "description": "JSON encoder/decoder for AssemblyScript",
+    "main": "lib/index.js",
+    "author": "Jairus Tanaka",
+    "contributors": [
+        "DogWhich"
+    ],
+    "license": "MIT",
+    "dependencies": {
+        "assemblyscript": "^0.24.1",
+        "visitor-as": "^0.10.2"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/JairusSW/as-json.git"
+    },
+    "keywords": [
+        "assemblyscript",
+        "json",
+        "serialize",
+        "deserialize",
+        "serde"
+    ],
+    "bugs": {
+        "url": "https://github.com/JairusSW/as-json/issues"
+    },
+    "homepage": "https://github.com/JairusSW/as-json#readme",
+    "type": "module",
+    "exports": "./lib/index.js"
+}

@@ -47,8 +47,8 @@ npm manifest:
     },
     "scripts": {
       "build": "yarn asbuild",
-      "asbuild:debug": "asc assembly/index.ts --target debug --disable bulk-memory --sourceMap --runtime stub --exportStart --use abort=assembly/index/logAndCrash --debug && node util/rewrite-wasm.js build/debug.wasm",
-      "asbuild:release": "asc assembly/index.ts --target release --disable bulk-memory --sourceMap --runtime stub --exportStart --use abort=assembly/index/logAndCrash --debug && node util/rewrite-wasm.js build/release.wasm --optimize=1",
+      "asbuild:debug": "asc assembly/example.ts --target debug --disable bulk-memory --sourceMap --runtime stub --exportStart --use abort=assembly/index/logAndCrash --debug && node util/rewrite-wasm.js build/debug.wasm",
+      "asbuild:release": "asc assembly/example.ts --target release --disable bulk-memory --sourceMap --runtime stub --exportStart --use abort=assembly/index/logAndCrash --debug && node util/rewrite-wasm.js build/release.wasm --optimize=1",
       "asbuild": "npm run asbuild:debug && npm run asbuild:release",
       "test": "jest",
       "start": "npx serve ."

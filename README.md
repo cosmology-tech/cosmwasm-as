@@ -74,7 +74,7 @@ cosmwasm-as
     │   │   ├── contract.ts -- `contract.rs` analog
     │   │   ├── msg.ts -- `msg.rs` analog
     │   │   └── state.ts -- `state.rs` analog
-    │   └── index.ts -- directs compiler on assembling Wasm module -- `lib.rs` analog
+    │   └── example.ts -- directs compiler on assembling Wasm module -- `lib.rs` analog
     │── util/ -- Various build utilities
     │   └── rewrite-wasm.js -- Tool for rewriting Wasm binaries to work with CosmWasm
     ├── build/
@@ -175,12 +175,12 @@ extern "C" {
 
 </details>
 
-This is the main "meat" that is relevant to our implementation, which must get explicitly exported by `assembly/index.ts` to get picked up by the AssemblyScript compiler.
-Their implementation resides in `assembly/cosmwasm/exports.ts` -- we simply re-export them in our `assembly/index.ts`:
+This is the main "meat" that is relevant to our implementation, which must get explicitly exported by `assembly/example.ts` to get picked up by the AssemblyScript compiler.
+Their implementation resides in `assembly/cosmwasm/exports.ts` -- we simply re-export them in our `assembly/example.ts`:
 
 
 ```ts
-// assembly/index.ts
+// assembly/x
 
 // Required Wasm exports
 export {
@@ -218,7 +218,7 @@ We altered the build script slightly to make it work with CosmWasm.
 #### Step 1: Compile AssemblyScript to Wasm
 
 ```diff
-asc assembly/index.ts
+asc assembly/example.ts
 	--target debug
 	--sourceMap
 	--debug

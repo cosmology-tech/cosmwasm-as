@@ -6,18 +6,27 @@
 import { Region } from "./cosmwasm";
 import { abort } from './cosmwasm/imports';
 
-export {
-  interface_version_8,
-  instantiate,
-  allocate,
-  deallocate
-} from './cosmwasm/exports';
+// export {
+//   interface_version_8,
+//   instantiate,
+//   allocate,
+//   deallocate
+// } from './cosmwasm/exports';
+//
+// // Options Wasm exports
+// export {
+//   execute,
+//   query,
+// } from './cosmwasm/exports';
 
-// Options Wasm exports
-export {
-  execute,
-  query,
-} from './cosmwasm/exports';
+@contract
+class MyContract {
+
+	@query
+	public static get_count(): i32 {
+		return 0;
+	}
+}
 
 export function logAndCrash(
     message: string | null,
