@@ -1,7 +1,0 @@
-{
-  "type": "module",
-  "devDependencies": {
-    "binaryen": "^111.0.0",
-    "minimist": "^1.2.7"
-  }
-}

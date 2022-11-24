@@ -1,5 +1,5 @@
-import { JSON } from "json-as/assembly";
-import {Item} from "../cosmwasm/cw-storage-plus";
+import {JSON} from "json-as/assembly";
+import {Item} from "@cosmwasm-as/std";
 
 @json
 export class State {

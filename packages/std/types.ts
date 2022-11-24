@@ -1,6 +1,6 @@
-import { JSON } from "json-as/assembly";
-import { allocate } from './exports';
-import { encode, decode } from "as-base64/assembly";
+import {JSON} from "json-as/assembly";
+import {allocate} from './exports';
+import {encode, decode} from "as-base64/assembly";
 import {Result} from "as-container";
 
 @json
@@ -14,13 +14,13 @@ export class Info {
 export class Env {
 	block: EnvBlock;
 	contract: EnvContract;
-	transaction: EnvTransaction;
+	transaction_info: EnvTransaction | null;
 }
 
 @json
 export class EnvBlock {
-	time: u64;
 	height: u64;
+	time: string;
 	chain_id: string;
 }
 
@@ -53,7 +53,8 @@ export class Event {
 }
 
 @json
-export class CosmosMsg {}
+export class CosmosMsg {
+}
 
 @json
 export class BankMsg extends CosmosMsg {
@@ -123,12 +124,12 @@ export class Response {
 	}
 
 	addAttribute(key: string, value: string): Response {
-		this.attributes.push({ key, value });
+		this.attributes.push({key, value});
 		return this;
 	}
 
 	addEvent(type: string, attributes: Attribute[]): Response {
-		this.events.push({ type, attributes });
+		this.events.push({type, attributes});
 		return this;
 	}
 
@@ -148,6 +149,7 @@ export class SubMsg {
 
 export class Box<T> {
 	value: T;
+
 	constructor(value: T) {
 		this.value = value;
 	}
@@ -159,6 +161,7 @@ export class Box<T> {
 
 export class Binary {
 	value: string;
+
 	constructor(value: string) {
 		this.value = value;
 	}
@@ -180,7 +183,8 @@ export function from_binary<T>(value: string): Result<T, string> {
 }
 
 export class Region {
-	constructor(public ptr: u32, public offset: u32, public capacity: u32, public length: u32) {}
+	constructor(public ptr: u32, public offset: u32, public capacity: u32, public length: u32) {
+	}
 
 	public static fromPtr(ptr: usize): Region {
 		let offset = load<u32>(ptr);

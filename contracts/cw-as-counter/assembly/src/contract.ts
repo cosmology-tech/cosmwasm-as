@@ -1,5 +1,5 @@
-import {Binary, Response, Env, Info, to_binary} from "../cosmwasm/types";
-import { Result } from "as-container";
+import {Binary, Response, Env, Info, to_binary} from "@cosmwasm-as/std";
+import {Result} from "as-container";
 import {InstantiateMsg, ExecuteMsg, QueryMsg, CountResponse} from "./msg";
 import {STATE} from "./state";
 
@@ -11,7 +11,7 @@ function Err(msg: string): Result<Response, string> {
 	return Result.Err<Response, string>(msg);
 }
 
-export function do_instantiate(env: Env, info: Info, msg: InstantiateMsg): Result<Response, string> {
+export function instantiateFn(env: Env, info: Info, msg: InstantiateMsg): Result<Response, string> {
 
 	STATE().save({
 		owner: info.sender,
@@ -22,7 +22,7 @@ export function do_instantiate(env: Env, info: Info, msg: InstantiateMsg): Resul
 	return Ok(res);
 }
 
-export function do_execute(env: Env, info: Info, msg: ExecuteMsg): Result<Response, string> {
+export function executeFn(env: Env, info: Info, msg: ExecuteMsg): Result<Response, string> {
 	if (msg.increment) {
 		return try_increment(env, info);
 	} else if (msg.reset) {
@@ -67,7 +67,7 @@ function try_reset(env: Env, info: Info, count: i32): Result<Response, string> {
 }
 
 
-export function do_query(env: Env, msg: QueryMsg): Result<Binary, string> {
+export function queryFn(env: Env, msg: QueryMsg): Result<Binary, string> {
 	if (msg.get_count) {
 		let _q = query_count();
 		if (_q.isOk) {
@@ -83,5 +83,6 @@ export function query_count(): Result<CountResponse, string> {
 		return Result.Err<CountResponse, string>(_state.unwrapErr());
 	}
 	let state = _state.unwrap();
-	return Result.Ok<CountResponse, string>({ count: state.count });
+	return Result.Ok<CountResponse, string>({count: state.count});
+	
 }

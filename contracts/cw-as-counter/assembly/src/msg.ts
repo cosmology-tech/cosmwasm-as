@@ -1,5 +1,5 @@
 import { JSON } from "json-as/assembly";
-import { Box} from "../cosmwasm/types";
+import { Box} from "../../../../packages/std/types";
 
 @json
 export class InstantiateMsg {
