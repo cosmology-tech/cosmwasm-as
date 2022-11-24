@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![image](./banner.png)
+![image](./banner.svg)
 
 </div>
 
