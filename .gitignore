@@ -12,3 +12,4 @@ src/diagnosticMessages.generated.ts
 coverage/
 .idea/
 .DS_Store
+*.iml
