@@ -31,8 +31,11 @@ JavaScript-based runtime for CosmWasm that is convenient to instrument and run l
 
 The AssemblyScript contract shown in this repository are uploaded to the following addresses:
 
-- Terra Testnet - `pisco-1`: *(pending upload)*
-- Juno Testnet - `uni-5`: `juno13qfr40ewq0ng63ukgxm4xxue6uv4u5d65xpqes3srpq39jjux4hqeqg484`
+- Terra
+  Testnet (`pisco-1`): [terra1rnvm38z2d9aksqlx7hkcrjj9cyvn3wad4nhe3d6a87h2g7f0lrtqdy3fl6](https://finder.terra.money/testnet/address/terra1rnvm38z2d9aksqlx7hkcrjj9cyvn3wad4nhe3d6a87h2g7f0lrtqdy3fl6)
+- Juno Testnet (`uni-5`): `juno13qfr40ewq0ng63ukgxm4xxue6uv4u5d65xpqes3srpq39jjux4hqeqg484`
+
+Feel free to play around with them -- it's just a simple counter.
 
 ## Quickstart
 
@@ -49,12 +52,13 @@ $ cd cosmwasm-as
 $ yarn
 ```
 
-3. Run `asbuild` to build the AssemblyScript Wasm binaries.
+3. Run `yarn build` in the contract directory to build the AssemblyScript Wasm binaries.
 
-**NOTE:** This compiles using AssemblyScript, then rewrites it using `@cosmwasm-as/rewrite-wasm.js`, which uses
+**NOTE:** This compiles using AssemblyScript, then rewrites it using `@cosmwasm-as/rewrite-wasm`, which uses
 Binaryen.
 
 ```bash
+$ cd contracts/cw-as-counter
 $ yarn build
 ```
 
@@ -131,7 +135,7 @@ extern "C" {
 
 </details>
 
-We declare them inside `assembly/cosmwasm/imports` and use where needed inside our library code.
+We declare them inside `@cosmwasm-as/std/imports.ts` and use where needed inside our library code.
 Note that since these are quite low level, the end-user consuming the `cosmwasm-as` API probably won't need to import
 them directly.
 
@@ -174,23 +178,37 @@ extern "C" {
 
 This is the main "meat" that is relevant to our implementation, which must get explicitly exported
 by `assembly/index.ts` to get picked up by the AssemblyScript compiler.
-Their implementation resides in `assembly/cosmwasm/exports.ts` -- we simply re-export them in our `assembly/index.ts`:
+Their implementation resides in `@cosmwasm-as/std/exports.ts` -- we simply re-export them in our `assembly/index.ts`:
 
 ```ts
 // assembly/index.ts
 
+// This file is important for the AssemblyScript compiler to correctly construct
+// the WASM module, and should be common to all CosmWasm AssemblyScript projects.
+// To program your contract, you should modify code in the `./contract` folder.
+
 // Required Wasm exports
+import {do_instantiate, do_execute, do_query} from "@cosmwasm-as/std";
+import {ExecuteMsg, InstantiateMsg, QueryMsg} from "./src/msg";
+import {instantiateFn, executeFn, queryFn} from "./src/contract";
+
 export {
 	interface_version_8,
 	allocate,
-	deallocate
+	deallocate,
 } from '@cosmwasm-as/std';
 
-// Optional Wasm exports
-export {
-	execute,
-	query,
-} from './cosmwasm/exports';
+export function instantiate(env: i32, info: i32, msg: i32): i32 {
+	return do_instantiate<InstantiateMsg>(env, info, msg, instantiateFn);
+}
+
+export function execute(env: i32, info: i32, msg: i32): i32 {
+	return do_execute<ExecuteMsg>(env, info, msg, executeFn);
+}
+
+export function query(env: i32, msg: i32): i32 {
+	return do_query<QueryMsg>(env, msg, queryFn);
+}
 ```
 
 ### Passing data to/from CosmWasm VM (host environment)
