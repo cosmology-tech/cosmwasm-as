@@ -238,7 +238,7 @@ asc assembly/index.ts
 	--sourceMap
 	--debug
 +	--disable bulk-memory
-+	--use abort=assembly/index/logAndCrash
++	--use abort=~lib/@cosmwasm-as/std/as/ABORT
 +	--runtime stub
 +	--exportStart
 ```
