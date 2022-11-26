@@ -1,6 +1,6 @@
 {
 	"name": "cw-as-counter",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"description": "AssemblyScript implementation of basic CosmWasm counter contract",
 	"main": "index.js",
 	"author": "William Chen",
