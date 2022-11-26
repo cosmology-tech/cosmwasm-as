@@ -1,18 +1,18 @@
 {
-  "name": "@cosmwasm-as/rewrite-wasm",
-  "version": "0.0.4",
-  "type": "module",
-  "devDependencies": {
-	"binaryen": "^111.0.0",
-	"minimist": "^1.2.7"
-  },
-  "main": "rewrite-wasm.js",
-  "bin": {
-	"cosmwasm-as-rewrite-wasm": "./rewrite-wasm.js"
-  },
-  "readme": "README.md",
-  "publishConfig": {
-	"access": "public",
-	"registry": "https://registry.npmjs.org/"
-  }
+ "name": "@cosmwasm-as/rewrite-wasm",
+ "version": "0.0.5",
+ "type": "module",
+ "devDependencies": {
+  "binaryen": "^111.0.0",
+  "minimist": "^1.2.7"
+ },
+ "main": "rewrite-wasm.js",
+ "bin": {
+  "cosmwasm-as-rewrite-wasm": "./rewrite-wasm.js"
+ },
+ "readme": "README.md",
+ "publishConfig": {
+  "access": "public",
+  "registry": "https://registry.npmjs.org/"
+ }
 }
