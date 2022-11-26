@@ -270,7 +270,7 @@ We authored a tool using [`Binaryen`](https://github.com/bytecode-alliance/binar
 instruction and replace it by prepending it to each entrypoint's function body.
 
 ```bash
-cosmwasm-as-rewrite-wasm util/rewrite-wasm [--optimize=1] build/debug.wasm
+cosmwasm-as-rewrite-wasm [--optimize=1] build/debug.wasm
 ```
 
 ## Copyright
