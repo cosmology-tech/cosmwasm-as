@@ -1,5 +1,5 @@
 {
-  "name": "root",
+  "name": "cosmwasm-as",
   "private": false,
   "workspaces": [
 	"packages/*",
@@ -15,5 +15,9 @@
 	"trailingComma": "es5",
 	"useTabs": false,
 	"tabWidth": 2
+  },
+  "publishConfig": {
+	"access": "public",
+	"registry": "https://registry.npmjs.org/"
   }
 }
