@@ -1,13 +1,13 @@
 {
-  "name": "@cosmwasm-as/rewrite-wasm",
-  "version": "0.0.1",
-  "type": "module",
-  "devDependencies": {
-	"binaryen": "^111.0.0",
-	"minimist": "^1.2.7"
-  },
-  "main": "rewrite-wasm.js",
-  "bin": {
-	"cosmwasm-as-rewrite-wasm": "./rewrite-wasm.js"
-  }
+ "name": "@cosmwasm-as/rewrite-wasm",
+ "version": "0.0.1",
+ "type": "module",
+ "devDependencies": {
+  "binaryen": "^111.0.0",
+  "minimist": "^1.2.7"
+ },
+ "main": "rewrite-wasm.js",
+ "bin": {
+  "cosmwasm-as-rewrite-wasm": "./rewrite-wasm.js"
+ }
 }
