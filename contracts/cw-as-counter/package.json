@@ -1,36 +1,36 @@
 {
-  "name": "cw-as-counter",
-  "version": "0.0.5",
-  "description": "AssemblyScript implementation of basic CosmWasm counter contract",
-  "main": "index.js",
-  "author": "William Chen",
-  "license": "MIT",
-  "devDependencies": {
-	"@cosmwasm-as/rewrite-wasm": "^0.0.2",
-	"assemblyscript": "^0.24.1",
-	"binaryen": "^111.0.0",
-	"jest": "^29.3.1",
-	"ts-jest": "^29.0.3",
-	"visitor-as": "^0.11.3"
-  },
-  "exports": {
-	".": {
-	  "import": "./build/release.js",
-	  "types": "./build/release.d.ts"
+	"name": "cw-as-counter",
+	"version": "0.0.6",
+	"description": "AssemblyScript implementation of basic CosmWasm counter contract",
+	"main": "index.js",
+	"author": "William Chen",
+	"license": "MIT",
+	"devDependencies": {
+		"@cosmwasm-as/rewrite-wasm": "^0.0.2",
+		"assemblyscript": "^0.24.1",
+		"binaryen": "^111.0.0",
+		"jest": "^29.3.1",
+		"ts-jest": "^29.0.3",
+		"visitor-as": "^0.11.3"
+	},
+	"exports": {
+		".": {
+			"import": "./build/release.js",
+			"types": "./build/release.d.ts"
+		}
+	},
+	"scripts": {
+		"build": "yarn asbuild && yarn rewrite-wasm",
+		"asbuild:debug": "asc assembly/index.ts --target debug --disable bulk-memory --sourceMap --runtime stub --exportStart --use abort=~lib/@cosmwasm-as/std/as/ABORT --debug",
+		"asbuild:release": "asc assembly/index.ts --target release --disable bulk-memory --sourceMap --runtime stub --exportStart --use abort=~lib/@cosmwasm-as/std/as/ABORT --debug",
+		"asbuild": "npm run asbuild:debug && npm run asbuild:release",
+		"rewrite-wasm": "cosmwasm-as-rewrite-wasm build/debug.wasm && cosmwasm-as-rewrite-wasm --optimize=1 build/release.wasm",
+		"test": "jest"
+	},
+	"dependencies": {
+		"@cosmwasm-as/std": "^0.0.2",
+		"as-base64": "^0.2.0",
+		"as-container": "^0.6.1",
+		"json-as": "^0.5.4"
 	}
-  },
-  "scripts": {
-	"build": "yarn asbuild && yarn rewrite-wasm",
-	"asbuild:debug": "asc assembly/index.ts --target debug --disable bulk-memory --sourceMap --runtime stub --exportStart --use abort=~lib/@cosmwasm-as/std/as/ABORT --debug",
-	"asbuild:release": "asc assembly/index.ts --target release --disable bulk-memory --sourceMap --runtime stub --exportStart --use abort=~lib/@cosmwasm-as/std/as/ABORT --debug",
-	"asbuild": "npm run asbuild:debug && npm run asbuild:release",
-	"rewrite-wasm": "cosmwasm-as-rewrite-wasm build/debug.wasm && cosmwasm-as-rewrite-wasm --optimize=1 build/release.wasm",
-	"test": "jest"
-  },
-  "dependencies": {
-	"@cosmwasm-as/std": "^0.0.2",
-	"as-base64": "^0.2.0",
-	"as-container": "^0.6.1",
-	"json-as": "^0.5.4"
-  }
 }
