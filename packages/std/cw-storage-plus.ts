@@ -1,8 +1,8 @@
-import { JSON } from "json-as/assembly";
+import {JSON} from "json-as/assembly";
 import {Option, Result} from "as-container";
 
-import { Region } from "./types";
-import { db_read, db_write } from "./imports";
+import {Region} from "./types";
+import {db_read, db_write} from "./imports";
 
 
 export class Storage {
@@ -26,14 +26,19 @@ export class Storage {
 	}
 }
 
-export class Item<T> {
+class StorageHelper {
 	store: Storage;
 	storageKey: Uint8Array;
+	storageKeyStr: string;
 
 	constructor(storageKey: string) {
 		this.store = new Storage();
+		this.storageKeyStr = storageKey;
 		this.storageKey = Uint8Array.wrap(String.UTF8.encode(storageKey));
 	}
+}
+
+export class Item<T> extends StorageHelper {
 
 	save(value: T): Result<'unit', string> {
 		let valueBuffer = Uint8Array.wrap(String.UTF8.encode(JSON.stringify(value)));
@@ -69,4 +74,28 @@ export class Item<T> {
 	//
 	// 	return Result.Ok<T, string>(output.unwrap());
 	// }
+}
+
+export class Map<K, V> extends StorageHelper {
+
+	private getKeyWithPrefix(key: K): Uint8Array {
+		let keyWithPrefix = this.storageKeyStr.concat(JSON.stringify(key).slice(1, -1));
+		return Uint8Array.wrap(String.UTF8.encode(keyWithPrefix));
+	}
+
+	save(key: K, value: V): Result<'unit', string> {
+		// remove quotes
+		let valueBuffer = Uint8Array.wrap(String.UTF8.encode(JSON.stringify(value)));
+		this.store.set(this.getKeyWithPrefix(key), valueBuffer);
+		return Result.Ok<'unit', string>("unit");
+	}
+
+	load(key: K): Result<V, string> {
+		let valueBuffer = this.store.get(this.getKeyWithPrefix(key));
+		if (valueBuffer.isNone) {
+			return Result.Err<V, string>("No value found");
+		}
+		let value = JSON.parse<V>(String.UTF8.decode(valueBuffer.unwrap().buffer));
+		return Result.Ok<V, string>(value);
+	}
 }

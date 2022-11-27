@@ -54,10 +54,26 @@ export class Event {
 
 @json
 export class CosmosMsg {
+	wasm: WasmMsg | null;
+	bank: BankMsg | null;
+
+	static WasmMsg(msg: WasmMsg): CosmosMsg {
+		return {
+			wasm: msg,
+			bank: null,
+		}
+	}
+
+	static BankMsg(msg: BankMsg): CosmosMsg {
+		return {
+			wasm: null,
+			bank: msg,
+		}
+	}
 }
 
 @json
-export class BankMsg extends CosmosMsg {
+export class BankMsg {
 	send: BankSendMsg | null;
 }
 
@@ -68,15 +84,29 @@ export class BankSendMsg {
 }
 
 @json
-export class WasmMsg extends CosmosMsg {
+export class WasmMsg {
 	execute: WasmExecuteMsg | null;
 	instantiate: WasmInstantiateMsg | null;
+
+	static Execute(msg: WasmExecuteMsg): WasmMsg {
+		return {
+			execute: msg,
+			instantiate: null,
+		}
+	}
+
+	static Instantiate(msg: WasmInstantiateMsg): WasmMsg {
+		return {
+			execute: null,
+			instantiate: msg,
+		}
+	}
 }
 
 @json
 export class WasmExecuteMsg {
 	contract_addr: string;
-	msg: string;
+	msg: Binary;
 	funds: Coin[];
 }
 
@@ -104,11 +134,16 @@ export class Response {
 		this.data = data;
 	}
 
+	static new(): Response {
+		return new Response();
+	}
+
+	// alias
 	static new_(): Response {
 		return new Response();
 	}
 
-	addMessage<T extends CosmosMsg>(msg: T): Response {
+	addMessage(msg: CosmosMsg): Response {
 		this.messages.push({
 			id: 0,
 			reply_on: "never",
@@ -158,6 +193,7 @@ export class Box<T> {
 		return JSON.stringify(this.value);
 	}
 }
+
 
 export class Binary {
 	value: string;
