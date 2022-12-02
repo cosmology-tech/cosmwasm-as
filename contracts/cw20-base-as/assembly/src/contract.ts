@@ -210,7 +210,7 @@ function decreaseBalance(owner: string, amount: u64): Result<bool, string> {
 	if (balance < amount)
 		return Result.Err<bool, string>('insufficient funds');
 	
-	const result = BALANCES().save(owner, balance + amount);
+	const result = BALANCES().save(owner, balance - amount);
 	if (result.isErr)
 		return Result.Err<bool, string>(result.unwrapErr());
 	return Result.Ok<bool, string>(true);
