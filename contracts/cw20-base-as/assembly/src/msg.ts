@@ -80,7 +80,7 @@ export class QueryTokenInfoResponse {
 @json
 export class QueryMinterResponse {
 	minter: string | null;
-	cap: u64 | null;
+	cap: u64;
 }
 
 // ===== Receive Message =====

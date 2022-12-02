@@ -183,7 +183,7 @@ function query_minter(env: Env, msg: QueryMinterMsg): Result<Binary, string> {
 	
 	const rBin = to_binary<QueryMinterResponse>({
 		minter: rState.unwrap().minter,
-		cap: null,
+		cap: 0,
 	});
 	if (rBin.isErr)
 		return Err<Binary>(rBin.unwrapErr());
