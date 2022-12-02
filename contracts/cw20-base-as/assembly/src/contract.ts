@@ -13,8 +13,8 @@ function Err<T = Response>(msg: string): Result<T, string> {
 
 export function instantiateFn(env: Env, info: Info, msg: InstantiateMsg): Result<Response, string> {
 	STATE().save({
-		minter: msg.minter as string || info.sender,
-		marketing: msg.marketing as string || info.sender,
+		minter: msg.minter !== null ? msg.minter : info.sender,
+		marketing: msg.marketing !== null ? msg.marketing : info.sender,
 		name: msg.name,
 		symbol: msg.symbol,
 		decimals: msg.decimals,
