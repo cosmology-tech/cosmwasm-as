@@ -1,0 +1,36 @@
+{
+	"name": "cw20-base-as",
+	"version": "0.1.0",
+	"description": "AssemblyScript implementation of cw20-base",
+	"main": "index.js",
+	"author": "Kiruse",
+	"license": "MIT",
+	"devDependencies": {
+		"@cosmwasm-as/rewrite-wasm": "^0.0.8",
+		"assemblyscript": "^0.24.1",
+		"binaryen": "^111.0.0",
+		"jest": "^29.3.1",
+		"ts-jest": "^29.0.3",
+		"visitor-as": "^0.11.3"
+	},
+	"exports": {
+		".": {
+			"import": "./build/release.js",
+			"types": "./build/release.d.ts"
+		}
+	},
+	"scripts": {
+		"build": "yarn asbuild && yarn rewrite-wasm",
+		"asbuild:debug": "asc assembly/index.ts --target debug --disable bulk-memory --sourceMap --runtime stub --exportStart --use abort=~lib/@cosmwasm-as/std/as/ABORT --debug",
+		"asbuild:release": "asc assembly/index.ts --target release --disable bulk-memory --sourceMap --runtime stub --exportStart --use abort=~lib/@cosmwasm-as/std/as/ABORT --debug",
+		"asbuild": "npm run asbuild:debug && npm run asbuild:release",
+		"rewrite-wasm": "cosmwasm-as-rewrite-wasm build/debug.wasm && cosmwasm-as-rewrite-wasm --optimize=1 build/release.wasm",
+		"test": "jest"
+	},
+	"dependencies": {
+		"@cosmwasm-as/std": "^0.0.8",
+		"as-base64": "^0.2.0",
+		"as-container": "^0.6.1",
+		"json-as": "^0.5.4"
+	}
+}
