@@ -1,7 +1,9 @@
-import { Binary, Response, Env, Info, to_binary, CosmosMsg } from "@cosmwasm-as/std";
+import { Binary, Response, Env, Info, to_binary } from "@cosmwasm-as/std";
 import { Result } from "as-container";
-import { InstantiateMsg, ExecuteMsg, QueryMsg, ExecuteTransferMsg, ExecuteSendMsg, ExecuteBurnMsg, ExecuteMintMsg, ReceiveMsg, QueryBalanceMsg, QueryTokenInfoMsg, QueryMinterMsg, QueryBalanceResponse, QueryTokenInfoResponse, QueryMinterResponse } from "./msg";
-import { BALANCES, STATE } from "./state";
+import { JSON } from "json-as";
+import { Expiration } from "./expiration";
+import { InstantiateMsg, ExecuteMsg, QueryMsg, ExecuteTransferMsg, ExecuteSendMsg, ExecuteBurnMsg, ExecuteMintMsg, ReceiveMsg, QueryBalanceMsg, QueryTokenInfoMsg, QueryMinterMsg, QueryBalanceResponse, QueryTokenInfoResponse, QueryMinterResponse, ExecuteSendFromMsg, ExecuteTransferFromMsg, ExecuteBurnFromMsg, ExecuteIncreaseAllowanceMsg, ExecuteDecreaseAllowanceMsg } from "./msg";
+import { ALLOWANCES, BALANCES, STATE } from "./state";
 
 function Ok<T = Response>(res: T): Result<T, string> {
 	return Result.Ok<T, string>(res);
@@ -29,14 +31,29 @@ export function executeFn(env: Env, info: Info, msg: ExecuteMsg): Result<Respons
 	if (msg.transfer) {
 		return try_transfer(env, info, msg.transfer as ExecuteTransferMsg);
 	}
+	if (msg.transfer_from) {
+		return try_transfer_from(env, info, msg.transfer_from as ExecuteTransferFromMsg);
+	}
 	else if (msg.send) {
 		return try_send(env, info, msg.send as ExecuteSendMsg);
+	}
+	else if (msg.send_from) {
+		return try_send_from(env, info, msg.send_from as ExecuteSendFromMsg);
 	}
 	else if (msg.mint) {
 		return try_mint(env, info, msg.mint as ExecuteMintMsg);
 	}
 	else if (msg.burn) {
 		return try_burn(env, info, msg.burn as ExecuteBurnMsg);
+	}
+	else if (msg.burn_from) {
+		return try_burn_from(env, info, msg.burn_from as ExecuteBurnFromMsg);
+	}
+	else if (msg.increase_allowance) {
+		return try_increase_allowance(env, info, msg.increase_allowance as ExecuteIncreaseAllowanceMsg);
+	}
+	else if (msg.decrease_allowance) {
+		return try_decrease_allowance(env, info, msg.decrease_allowance as ExecuteDecreaseAllowanceMsg);
 	}
 	else {
 		return Err("Unknown message");
@@ -60,14 +77,31 @@ function try_transfer(env: Env, info: Info, msg: ExecuteTransferMsg): Result<Res
 	);
 }
 
-function try_send(env: Env, info: Info, msg: ExecuteSendMsg): Result<Response, string> {
-	const r1 = decreaseBalance(info.sender, msg.amount);
+function try_transfer_from(env: Env, info: Info, msg: ExecuteTransferFromMsg): Result<Response, string> {
+	const r1 = decreaseAllowance(env, msg.owner, info.sender, msg.amount, null);
 	if (r1.isErr)
 		return Err<Response>(r1.unwrapErr());
 	
-	const r2 = increaseBalance(msg.contract, msg.amount);
+	const r2 = decreaseBalance(msg.owner, msg.amount);
 	if (r2.isErr)
 		return Err<Response>(r2.unwrapErr());
+	
+	const r3 = increaseBalance(msg.recipient, msg.amount);
+	if (r3.isErr)
+		return Err<Response>(r3.unwrapErr());
+	
+	return Ok<Response>(Response.new_()
+		.addAttribute('action', 'transfer_from')
+		.addAttribute('sender', msg.owner)
+		.addAttribute('spender', info.sender)
+		.addAttribute('recipient', msg.recipient)
+		.addAttribute('amount', msg.amount.toString())
+	);
+}
+
+function try_send(env: Env, info: Info, msg: ExecuteSendMsg): Result<Response, string> {
+	const r1 = try_transfer(env, info, { recipient: msg.contract, amount: msg.amount });
+	if (r1.isErr) return r1;
 	
 	const recvMsg = to_binary<ReceiveMsg>({
 		receive: {
@@ -94,6 +128,40 @@ function try_send(env: Env, info: Info, msg: ExecuteSendMsg): Result<Response, s
 					msg: recvMsg.unwrap(),
 				}
 			}
+		})
+	);
+}
+
+function try_send_from(env: Env, info: Info, msg: ExecuteSendFromMsg): Result<Response, string> {
+	const r1 = try_transfer_from(env, info, { owner: msg.owner, recipient: msg.contract, amount: msg.amount });
+	if (r1.isErr) return r1;
+	
+	const recvMsg = to_binary<ReceiveMsg>({
+		receive: {
+			sender: msg.owner,
+			amount: msg.amount,
+			msg: msg.msg,
+		},
+	});
+	if (recvMsg.isErr)
+		return Err<Response>(recvMsg.unwrapErr());
+	
+	return Ok<Response>(Response.new_()
+		.addAttribute('action', 'send_from')
+		.addAttribute('sender', msg.owner)
+		.addAttribute('spender', info.sender)
+		.addAttribute('contract', msg.contract)
+		.addAttribute('amount', msg.amount.toString())
+		.addMessage({
+			bank: null,
+			wasm: {
+				instantiate: null,
+				execute: {
+					contract_addr: msg.contract,
+					funds: [],
+					msg: recvMsg.unwrap(),
+				},
+			},
 		})
 	);
 }
@@ -132,6 +200,76 @@ function try_burn(env: Env, info: Info, msg: ExecuteBurnMsg): Result<Response, s
 		.addAttribute('action', 'burn')
 		.addAttribute('owner', info.sender)
 		.addAttribute('amount', msg.amount.toString())
+	);
+}
+
+function try_burn_from(env: Env, info: Info, msg: ExecuteBurnFromMsg): Result<Response, string> {
+	const r1 = decreaseAllowance(env, msg.owner, info.sender, msg.amount, null);
+	if (r1.isErr)
+		return Err<Response>(r1.unwrapErr());
+	
+	const r2 = decreaseBalance(msg.owner, msg.amount);
+	if (r2.isErr)
+		return Err<Response>(r2.unwrapErr());
+	return Ok<Response>(Response.new_()
+		.addAttribute('action', 'burn_from')
+		.addAttribute('owner', msg.owner)
+		.addAttribute('spender', info.sender)
+		.addAttribute('amount', msg.amount.toString())
+	);
+}
+
+function try_increase_allowance(env: Env, info: Info, msg: ExecuteIncreaseAllowanceMsg): Result<Response, string> {
+	const r1 = increaseAllowance(env, info.sender, msg.spender, msg.amount, msg.expires);
+	if (r1.isErr)
+		return Err<Response>(r1.unwrapErr());
+	return Ok<Response>(Response.new_()
+		.addAttribute('action', 'increase_allowance')
+		.addAttribute('owner', info.sender)
+		.addAttribute('spender', msg.spender)
+		.addAttribute('amount', msg.amount.toString())
+		.addAttribute('expires', JSON.stringify<Expiration | null>(msg.expires))
+	);
+}
+
+function try_decrease_allowance(env: Env, info: Info, msg: ExecuteDecreaseAllowanceMsg): Result<Response, string> {
+	const rAllowance = ALLOWANCES().load({ owner: info.sender, spender: msg.spender });
+	
+	// no existing allowance
+	if (rAllowance.isErr) {
+		const r1 = clearAllowance(info.sender, msg.spender, msg.expires);
+		if (r1.isErr)
+			return Err<Response>(r1.unwrapErr());
+	}
+	
+	// has existing stored
+	else {
+		const allowance = rAllowance.unwrap();
+		
+		// existing allowance expired
+		const rExpired = allowance.expires.isExpired(env);
+		if (rExpired.isErr)
+			return Err<Response>(rExpired.unwrapErr());
+		if (rExpired.unwrap() || allowance.amount < msg.amount) {
+			const r1 = clearAllowance(info.sender, msg.spender, msg.expires);
+			if (r1.isErr)
+				return Err<Response>(r1.unwrapErr());
+		}
+		// existing allowance has not expired: defer to decreaseAllowance
+		// note: cannot use decreaseAllowance for above cases as it would error instead of clearing
+		else {
+			const r1 = decreaseAllowance(env, info.sender, msg.spender, msg.amount, msg.expires);
+			if (r1.isErr)
+				return Err<Response>(r1.unwrapErr());
+		}
+	}
+	
+	return Ok<Response>(Response.new_()
+		.addAttribute('action', 'decrease_allowance')
+		.addAttribute('owner', info.sender)
+		.addAttribute('spender', msg.spender)
+		.addAttribute('amount', msg.amount.toString())
+		.addAttribute('expires', JSON.stringify<Expiration | null>(msg.expires))
 	);
 }
 
@@ -197,47 +335,105 @@ function isMinter(addr: string): Result<bool, string> {
 	return Ok<bool>(r1.unwrap().minter === addr);
 }
 
-function increaseBalance(owner: string, amount: u64): Result<bool, string> {
+function increaseBalance(owner: string, amount: u64): Result<"unit", string> {
 	const balance = BALANCES().load(owner).unwrapOr(0);
 	const result = BALANCES().save(owner, balance + amount);
 	if (result.isErr)
-		return Result.Err<bool, string>(result.unwrapErr());
-	return Result.Ok<bool, string>(true);
+		return Err<"unit">(result.unwrapErr());
+	return Ok<"unit">("unit");
 }
 
-function decreaseBalance(owner: string, amount: u64): Result<bool, string> {
+function decreaseBalance(owner: string, amount: u64): Result<"unit", string> {
 	const balance = BALANCES().load(owner).unwrapOr(0);
 	if (balance < amount)
-		return Result.Err<bool, string>('insufficient funds');
+		return Err<"unit">('insufficient funds');
 	
 	const result = BALANCES().save(owner, balance - amount);
 	if (result.isErr)
-		return Result.Err<bool, string>(result.unwrapErr());
-	return Result.Ok<bool, string>(true);
+		return Err<"unit">(result.unwrapErr());
+	return Ok<"unit">("unit");
 }
 
-function increaseTotalSupply(amount: u64): Result<bool, string> {
+function getAllowance(env: Env, owner: string, spender: string): Result<u64, string> {
+	const rAllowance = ALLOWANCES().load({ owner, spender });
+	if (rAllowance.isErr)
+		return Ok<u64>(0);
+	
+	const allowance = rAllowance.unwrap();
+	const rExpired = allowance.expires.isExpired(env);
+	if (rExpired.isErr)
+		return Err<u64>(rExpired.unwrapErr());
+	return Ok<u64>(rExpired.unwrap() ? 0 : allowance.amount);
+}
+
+function setAllowance(owner: string, spender: string, amount: u64, expires: Expiration): Result<"unit", string> {
+	const r1 = ALLOWANCES().save(
+		{ owner, spender },
+		{
+			amount,
+			expires,
+		},
+	);
+	if (r1.isErr)
+		return Err<"unit">(r1.unwrapErr());
+	return Ok<"unit">("unit");
+}
+
+function increaseAllowance(env: Env, owner: string, spender: string, amount: u64, expires: Expiration | null): Result<"unit", string> {
+	const rAllowance = getAllowance(env, owner, spender);
+	if (rAllowance.isErr)
+		return Err<"unit">(rAllowance.unwrapErr());
+	
+	const allowance = rAllowance.unwrap();
+	return setAllowance(owner, spender, allowance + amount, expires === null ? Expiration.default() : expires);
+}
+
+function decreaseAllowance(env: Env, owner: string, spender: string, amount: u64, expires: Expiration | null): Result<"unit", string> {
+	const rAllowance = ALLOWANCES().load({ owner, spender });
+	if (rAllowance.isErr)
+		return Err<"unit">(rAllowance.unwrapErr());
+	
+	const allowance = rAllowance.unwrap();
+	const rExpired = allowance.expires.isExpired(env);
+	if (rExpired.isErr)
+		return Err<"unit">(rExpired.unwrapErr());
+	
+	if (rExpired.unwrap() || allowance.amount < amount) {
+		return Err<"unit">('insufficient allowance');
+	} else {
+		return setAllowance(owner, spender, allowance.amount - amount, expires ? expires : allowance.expires);
+	}
+}
+
+function clearAllowance(owner: string, spender: string, expires: Expiration | null): Result<"unit", string> {
+	return ALLOWANCES().save({ owner, spender }, {
+		amount: 0,
+		expires: expires === null ? Expiration.default() : expires,
+	});
+}
+
+function increaseTotalSupply(amount: u64): Result<"unit", string> {
 	const r1 = STATE().load();
 	if (r1.isErr)
-		return Result.Err<bool, string>(r1.unwrapErr());
+		return Err<"unit">(r1.unwrapErr());
 	
 	const state = r1.unwrap();
 	state.total_supply += amount;
 	const r2 = STATE().save(state);
 	if (r2.isErr)
-		return Result.Err<bool, string>(r2.unwrapErr());
-	return Result.Ok<bool, string>(true);
+		return Err<"unit">(r2.unwrapErr());
+	return Ok<"unit">("unit");
 }
 
-function decreaseTotalSupply(amount: u64): Result<bool, string> {
+function decreaseTotalSupply(amount: u64): Result<"unit", string> {
 	const r1 = STATE().load();
 	if (r1.isErr)
-		return Result.Err<bool, string>(r1.unwrapErr());
+		return Err<"unit">(r1.unwrapErr());
 	
 	const state = r1.unwrap();
 	state.total_supply -= amount;
 	const r2 = STATE().save(state);
 	if (r2.isErr)
-		return Result.Err<bool, string>(r2.unwrapErr());
-	return Result.Ok<bool, string>(true);
+		return Err<"unit">(r2.unwrapErr());
+	return Ok<"unit">("unit");
 }

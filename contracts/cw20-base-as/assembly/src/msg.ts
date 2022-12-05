@@ -1,5 +1,6 @@
 import { Binary } from "@cosmwasm-as/std";
 import { JSON } from "json-as/assembly";
+import { Expiration } from "./expiration";
 
 // ===== Instantiate =====
 @json
@@ -19,7 +20,22 @@ export class ExecuteTransferMsg {
 }
 
 @json
+export class ExecuteTransferFromMsg {
+	owner: string;
+	recipient: string;
+	amount: u64;
+}
+
+@json
 export class ExecuteSendMsg {
+	contract: string;
+	amount: u64;
+	msg: Binary;
+}
+
+@json
+export class ExecuteSendFromMsg {
+	owner: string;
 	contract: string;
 	amount: u64;
 	msg: Binary;
@@ -37,11 +53,36 @@ export class ExecuteBurnMsg {
 }
 
 @json
+export class ExecuteBurnFromMsg {
+	owner: string;
+	amount: u64;
+}
+
+@json
+export class ExecuteIncreaseAllowanceMsg {
+	spender: string;
+	amount: u64;
+	expires: Expiration | null;
+}
+
+@json
+export class ExecuteDecreaseAllowanceMsg {
+	spender: string;
+	amount: u64;
+	expires: Expiration | null;
+}
+
+@json
 export class ExecuteMsg {
 	transfer: ExecuteTransferMsg | null;
+	transfer_from: ExecuteTransferFromMsg | null;
 	send: ExecuteSendMsg | null;
+	send_from: ExecuteSendFromMsg | null;
 	mint: ExecuteMintMsg | null;
 	burn: ExecuteBurnMsg | null;
+	burn_from: ExecuteBurnFromMsg | null;
+	increase_allowance: ExecuteIncreaseAllowanceMsg | null;
+	decrease_allowance: ExecuteDecreaseAllowanceMsg | null;
 }
 
 // ===== Query =====
