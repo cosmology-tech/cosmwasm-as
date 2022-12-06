@@ -246,6 +246,10 @@ describe("cw20-base-as", () => {
 		});
 	});
 	
+	// TODO: needs support in @cosmwasm-as/std
+	it.todo("queries all accounts");
+	it.todo("queries all allowances");
+	
 	it.todo("uploads embedded logo");
 });
 

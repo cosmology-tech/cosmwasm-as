@@ -119,6 +119,19 @@ export class QueryMarketingInfoMsg {}
 export class QueryMinterMsg {}
 
 @json
+export class QueryAllAllowancesMsg {
+	owner: string;
+	start_after: string | null;
+	limit: u32;
+}
+
+@json
+export class QueryAllAccountsMsg {
+	start_after: string | null;
+	limit: u32;
+}
+
+@json
 export class QueryAllowanceMsg {
 	owner: string;
 	spender: string;
@@ -131,9 +144,18 @@ export class QueryMsg {
 	marketing_info: QueryMarketingInfoMsg | null;
 	minter: QueryMinterMsg | null;
 	allowance: QueryAllowanceMsg | null;
+	all_allowances: QueryAllAllowancesMsg | null;
+	all_accounts: QueryAllAccountsMsg | null;
 }
 
 // ===== Query Response =====
+@json
+export class AllowanceInfo {
+	spender: string;
+	allowance: u64;
+	expires: Expiration;
+}
+
 @json
 export class QueryBalanceResponse {
 	balance: u64;
@@ -165,6 +187,16 @@ export class QueryMarketingInfoResponse {
 	description: string | null;
 	logo: LogoInfo | null;
 	marketing: string | null;
+}
+
+@json
+export class QueryAllAllowancesResponse {
+	allowances: AllowanceInfo[];
+}
+
+@json
+export class QueryAllAccountsResponse {
+	accounts: string[];
 }
 
 // ===== Receive Message =====

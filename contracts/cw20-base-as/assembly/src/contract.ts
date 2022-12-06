@@ -3,7 +3,7 @@ import { Result } from "as-container";
 import { JSON } from "json-as";
 import { Expiration } from "./expiration";
 import { Logo, LogoInfo } from "./logo";
-import { InstantiateMsg, ExecuteMsg, QueryMsg, ExecuteTransferMsg, ExecuteSendMsg, ExecuteBurnMsg, ExecuteMintMsg, ReceiveMsg, QueryBalanceMsg, QueryTokenInfoMsg, QueryMinterMsg, QueryBalanceResponse, QueryTokenInfoResponse, QueryMinterResponse, ExecuteSendFromMsg, ExecuteTransferFromMsg, ExecuteBurnFromMsg, ExecuteIncreaseAllowanceMsg, ExecuteDecreaseAllowanceMsg, QueryAllowanceMsg, QueryAllowanceResponse, QueryMarketingInfoMsg, QueryMarketingInfoResponse, ExecuteUpdateMinterMsg, ExecuteUpdateMarketingMsg } from "./msg";
+import { InstantiateMsg, ExecuteMsg, QueryMsg, ExecuteTransferMsg, ExecuteSendMsg, ExecuteBurnMsg, ExecuteMintMsg, ReceiveMsg, QueryBalanceMsg, QueryTokenInfoMsg, QueryMinterMsg, QueryBalanceResponse, QueryTokenInfoResponse, QueryMinterResponse, ExecuteSendFromMsg, ExecuteTransferFromMsg, ExecuteBurnFromMsg, ExecuteIncreaseAllowanceMsg, ExecuteDecreaseAllowanceMsg, QueryAllowanceMsg, QueryAllowanceResponse, QueryMarketingInfoMsg, QueryMarketingInfoResponse, ExecuteUpdateMinterMsg, ExecuteUpdateMarketingMsg, QueryAllAccountsMsg, QueryAllAllowancesMsg } from "./msg";
 import { ALLOWANCES, BALANCES, STATE } from "./state";
 
 function Ok<T = Response>(res: T): Result<T, string> {
@@ -361,6 +361,12 @@ export function queryFn(env: Env, msg: QueryMsg): Result<Binary, string> {
 	else if (msg.marketing_info) {
 		return query_marketing(env, msg.marketing_info as QueryMarketingInfoMsg);
 	}
+	else if (msg.all_allowances) {
+		return query_all_allowances(env, msg.all_allowances as QueryAllAllowancesMsg);
+	}
+	else if (msg.all_accounts) {
+		return query_all_accounts(env, msg.all_accounts as QueryAllAccountsMsg);
+	}
 	else {
 		return Err<Binary>("Unknown query");
 	}
@@ -434,6 +440,14 @@ function query_marketing(env: Env, msg: QueryMarketingInfoMsg): Result<Binary, s
 		logo: state.logo ? getLogoInfo(state.logo as Logo) : null,
 		marketing: state.marketing,
 	});
+}
+
+function query_all_allowances(env: Env, msg: QueryAllAllowancesMsg): Result<Binary, string> {
+	return Err<Binary>('Needs @cosmwasm-as/std support');
+}
+
+function query_all_accounts(env: Env, msg: QueryAllAccountsMsg): Result<Binary, string> {
+	return Err<Binary>('Needs @cosmwasm-as/std support');
 }
 
 function isMinter(addr: string): Result<bool, string> {
