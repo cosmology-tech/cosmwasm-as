@@ -54,16 +54,26 @@ describe("cw20-base-as", () => {
 			total_supply: 0,
 		});
 		
+		res = query(vm, env, { marketing_info: {} });
+		expect(res).toMatchObject({
+			project: '',
+			description: '',
+			logo: null,
+			marketing: info1.sender,
+		});
+		
 		res = query(vm, env, { minter: {} });
 		expect(res).toMatchObject({
 			minter: info1.sender,
 		});
 		
 		vm.instantiate(env, info1, {
-			minter: 'bob',
-			marketing: 'bob',
+			minter: info2.sender,
+			marketing: info2.sender,
 			name: 'TestToken2',
 			symbol: 'TT2',
+			project: 'https://token2.test.fi',
+			description: 'Our official second test token! Wooh!',
 			decimals: 18,
 		});
 		
@@ -73,6 +83,14 @@ describe("cw20-base-as", () => {
 			symbol: 'TT2',
 			decimal: 18,
 			total_supply: 0,
+		});
+		
+		res = query(vm, env, { marketing_info: {} });
+		expect(res).toMatchObject({
+			project: 'https://token2.test.fi',
+			description: 'Our official second test token! Wooh!',
+			logo: null,
+			marketing: info2.sender,
 		});
 		
 		res = query(vm, env, { minter: {} });
@@ -128,22 +146,59 @@ describe("cw20-base-as", () => {
 		vm.instantiate(env, info1, token1);
 		
 		vm.execute(env, info1, { mint: { recipient: info1.sender, amount: '10000' }});
-		let res = vm.execute(env, info1, { increase_allowance: { spender: info2.sender, amount: '1000' }});
-		console.log(getStore(vm))
-		console.log(vm.debugMsgs)
-		console.log(res.json)
+		vm.execute(env, info1, { increase_allowance: { spender: info2.sender, amount: '1000' }});
 		vm.execute(env, info2, { transfer_from: { owner: info1.sender, recipient: info2.sender, amount: '500' }});
 		
-		res = query(vm, env, { allowance: { owner: info1.sender, spender: info2.sender }});
+		let res = query(vm, env, { allowance: { owner: info1.sender, spender: info2.sender }});
 		expect(res).toMatchObject({
 			amount: 500,
 			expires: {
 				never: {},
 			},
 		});
+		
+		res = query(vm, env, { balance: { address: info1.sender }});
+		expect(res).toMatchObject({
+			balance: 9500,
+		});
+		
+		res = query(vm, env, { balance: { address: info2.sender }});
+		expect(res).toMatchObject({
+			balance: 500,
+		});
 	});
 	
-	it.todo("allowance expires");
+	it("fails exceeding allowance", async () => {
+		vm.instantiate(env, info1, token1);
+		
+		vm.execute(env, info1, { mint: { recipient: info1.sender, amount: '10000' }});
+		vm.execute(env, info1, { increase_allowance: { spender: info2.sender, amount: '1000' }});
+		let res = vm.execute(env, info2, { transfer_from: { owner: info1.sender, recipient: info2.sender, amount: '1100' }});
+		expect(res.json).toHaveProperty('error');
+	});
+	
+	// TODO: CWSimulate currently does not increase block height, so it's always at height 1, causing this to fail
+	it.skip("allowance expires", async () => {
+		vm.instantiate(env, info1, token1);
+		
+		vm.execute(env, info1, { mint: { recipient: info1.sender, amount: '10000' }});
+		vm.execute(env, info1, { increase_allowance: { spender: info2.sender, amount: '1000', expires: { at_height: 1 }}});
+		let res = vm.execute(env, info2, { transfer_from: { owner: info1.sender, recipient: info2.sender, amount: '1000' }});
+		expect(res.json).toHaveProperty('error');
+	});
+	
+	it.todo("updates minter");
+	
+	it.todo("updates marketing");
+	
+	// TODO
+	it.skip("uploads url logo", async () => {
+		vm.instantiate(env, info1, token1);
+		
+		vm.execute(env, info1, { })
+	});
+	
+	it.todo("uploads embedded logo");
 });
 
 function query(vm: VMInstance, env: Env, msg: any) {
@@ -155,9 +210,3 @@ function query(vm: VMInstance, env: Env, msg: any) {
 		throw new Error(json.err);
 	}
 }
-
-function getStore(vm: VMInstance) {
-	return vm.backend.storage.dict.mapEntries(([key, value]) => [decode(key), decode(value)]).toObject();
-}
-
-const decode = (b64: string) => fromUtf8(fromBase64(b64));

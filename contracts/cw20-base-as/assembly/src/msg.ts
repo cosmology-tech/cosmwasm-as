@@ -1,6 +1,7 @@
 import { Binary } from "@cosmwasm-as/std";
 import { JSON } from "json-as/assembly";
 import { Expiration } from "./expiration";
+import { LogoInfo } from "./logo";
 
 // ===== Instantiate =====
 @json
@@ -9,6 +10,8 @@ export class InstantiateMsg {
 	marketing: string | null;
 	name: string;
 	symbol: string;
+	project: string | null;
+	description: string | null;
 	decimals: i8;
 }
 
@@ -95,13 +98,24 @@ export class QueryBalanceMsg {
 export class QueryTokenInfoMsg {}
 
 @json
+export class QueryMarketingInfoMsg {}
+
+@json
 export class QueryMinterMsg {}
+
+@json
+export class QueryAllowanceMsg {
+	owner: string;
+	spender: string;
+}
 
 @json
 export class QueryMsg {
 	balance: QueryBalanceMsg | null;
 	token_info: QueryTokenInfoMsg | null;
+	marketing_info: QueryMarketingInfoMsg | null;
 	minter: QueryMinterMsg | null;
+	allowance: QueryAllowanceMsg | null;
 }
 
 // ===== Query Response =====
@@ -122,6 +136,20 @@ export class QueryTokenInfoResponse {
 export class QueryMinterResponse {
 	minter: string | null;
 	cap: u64;
+}
+
+@json
+export class QueryAllowanceResponse {
+	amount: u64;
+	expires: Expiration;
+}
+
+@json
+export class QueryMarketingInfoResponse {
+	project: string | null;
+	description: string | null;
+	logo: LogoInfo | null;
+	marketing: string | null;
 }
 
 // ===== Receive Message =====

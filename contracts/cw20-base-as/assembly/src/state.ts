@@ -1,13 +1,17 @@
 import { JSON } from "json-as";
 import { Item, Map } from "@cosmwasm-as/std";
 import { Expiration } from "./expiration";
+import { Logo } from "./logo";
 
 @json
 export class State {
-	minter: string | null;
-	marketing: string | null;
+	minter: string;
+	marketing: string;
 	name: string;
 	symbol: string;
+	project: string;
+	description: string;
+	logo: Logo | null;
 	decimals: u8;
 	// TODO: try v128?
 	total_supply: u64;

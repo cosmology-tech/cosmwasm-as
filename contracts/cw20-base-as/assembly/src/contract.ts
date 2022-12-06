@@ -1,8 +1,9 @@
-import { Binary, Response, Env, Info, to_binary } from "@cosmwasm-as/std";
+import { Binary, Response, Env, Info, to_binary, debug, Region } from "@cosmwasm-as/std";
 import { Result } from "as-container";
 import { JSON } from "json-as";
 import { Expiration } from "./expiration";
-import { InstantiateMsg, ExecuteMsg, QueryMsg, ExecuteTransferMsg, ExecuteSendMsg, ExecuteBurnMsg, ExecuteMintMsg, ReceiveMsg, QueryBalanceMsg, QueryTokenInfoMsg, QueryMinterMsg, QueryBalanceResponse, QueryTokenInfoResponse, QueryMinterResponse, ExecuteSendFromMsg, ExecuteTransferFromMsg, ExecuteBurnFromMsg, ExecuteIncreaseAllowanceMsg, ExecuteDecreaseAllowanceMsg } from "./msg";
+import { Logo, LogoInfo } from "./logo";
+import { InstantiateMsg, ExecuteMsg, QueryMsg, ExecuteTransferMsg, ExecuteSendMsg, ExecuteBurnMsg, ExecuteMintMsg, ReceiveMsg, QueryBalanceMsg, QueryTokenInfoMsg, QueryMinterMsg, QueryBalanceResponse, QueryTokenInfoResponse, QueryMinterResponse, ExecuteSendFromMsg, ExecuteTransferFromMsg, ExecuteBurnFromMsg, ExecuteIncreaseAllowanceMsg, ExecuteDecreaseAllowanceMsg, QueryAllowanceMsg, QueryAllowanceResponse, QueryMarketingInfoMsg, QueryMarketingInfoResponse } from "./msg";
 import { ALLOWANCES, BALANCES, STATE } from "./state";
 
 function Ok<T = Response>(res: T): Result<T, string> {
@@ -15,10 +16,13 @@ function Err<T = Response>(msg: string): Result<T, string> {
 
 export function instantiateFn(env: Env, info: Info, msg: InstantiateMsg): Result<Response, string> {
 	STATE().save({
-		minter: msg.minter !== null ? msg.minter : info.sender,
-		marketing: msg.marketing !== null ? msg.marketing : info.sender,
+		minter: msg.minter !== null ? msg.minter as string : info.sender,
+		marketing: msg.marketing !== null ? msg.marketing as string : info.sender,
 		name: msg.name,
 		symbol: msg.symbol,
+		project: msg.project !== null ? msg.project as string : "",
+		description: msg.description !== null ? msg.description as string : "",
+		logo: null,
 		decimals: msg.decimals,
 		total_supply: 0,
 	});
@@ -277,11 +281,17 @@ export function queryFn(env: Env, msg: QueryMsg): Result<Binary, string> {
 	if (msg.balance) {
 		return query_balance(env, msg.balance as QueryBalanceMsg);
 	}
+	if (msg.allowance) {
+		return query_allowance(env, msg.allowance as QueryAllowanceMsg);
+	}
 	else if (msg.token_info) {
 		return query_token_info(env, msg.token_info as QueryTokenInfoMsg);
 	}
 	else if (msg.minter) {
 		return query_minter(env, msg.minter as QueryMinterMsg);
+	}
+	else if (msg.marketing_info) {
+		return query_marketing(env, msg.marketing_info as QueryMarketingInfoMsg);
 	}
 	else {
 		return Err<Binary>("Unknown query");
@@ -295,6 +305,25 @@ function query_balance(env: Env, msg: QueryBalanceMsg): Result<Binary, string> {
 	if (rBin.isErr)
 		return Err<Binary>(rBin.unwrapErr());
 	return Ok<Binary>(rBin.unwrap());
+}
+
+function query_allowance(env: Env, msg: QueryAllowanceMsg): Result<Binary, string> {
+	const rAllowance = ALLOWANCES().load({ owner: msg.owner, spender: msg.spender });
+	if (rAllowance.isErr)
+		return Err<Binary>(rAllowance.unwrapErr());
+	
+	const allowance = rAllowance.unwrap();
+	if (allowance.expires.isExpired(env).unwrapOr(true)) {
+		return to_binary<QueryAllowanceResponse>({
+			amount: 0,
+			expires: Expiration.default(),
+		});
+	} else {
+		return to_binary<QueryAllowanceResponse>({
+			amount: allowance.amount,
+			expires: allowance.expires,
+		});
+	}
 }
 
 function query_token_info(env: Env, msg: QueryTokenInfoMsg): Result<Binary, string> {
@@ -328,6 +357,17 @@ function query_minter(env: Env, msg: QueryMinterMsg): Result<Binary, string> {
 	return Ok<Binary>(rBin.unwrap());
 }
 
+function query_marketing(env: Env, msg: QueryMarketingInfoMsg): Result<Binary, string> {
+	const state = STATE().load().unwrap();
+	
+	return to_binary<QueryMarketingInfoResponse>({
+		project: state.project,
+		description: state.description,
+		logo: state.logo ? getLogoInfo(state.logo as Logo) : null,
+		marketing: state.marketing,
+	});
+}
+
 function isMinter(addr: string): Result<bool, string> {
 	const r1 = STATE().load();
 	if (r1.isErr)
@@ -357,10 +397,12 @@ function decreaseBalance(owner: string, amount: u64): Result<"unit", string> {
 function getAllowance(env: Env, owner: string, spender: string): Result<u64, string> {
 	const rAllowance = ALLOWANCES().load({ owner, spender });
 	if (rAllowance.isErr)
+		// TODO: cannot currently (reliably) discern between key-not-found & other errors
 		return Ok<u64>(0);
 	
 	const allowance = rAllowance.unwrap();
 	const rExpired = allowance.expires.isExpired(env);
+	debug(Region.allocateAndWriteStr(JSON.stringify<Expiration>(allowance.expires)).ptr);
 	if (rExpired.isErr)
 		return Err<u64>(rExpired.unwrapErr());
 	return Ok<u64>(rExpired.unwrap() ? 0 : allowance.amount);
@@ -436,4 +478,20 @@ function decreaseTotalSupply(amount: u64): Result<"unit", string> {
 	if (r2.isErr)
 		return Err<"unit">(r2.unwrapErr());
 	return Ok<"unit">("unit");
+}
+
+function getLogoInfo(logo: Logo): LogoInfo {
+	if (logo.url) {
+		return {
+			url: logo.url,
+			embedded: null,
+		};
+	}
+	else if (logo.embedded) {
+		return {
+			url: null,
+			embedded: {},
+		};
+	}
+	throw new Error('Invalid Logo enum');
 }
