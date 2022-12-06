@@ -3,7 +3,7 @@ import { Result } from "as-container";
 import { JSON } from "json-as";
 import { Expiration } from "./expiration";
 import { Logo, LogoInfo } from "./logo";
-import { InstantiateMsg, ExecuteMsg, QueryMsg, ExecuteTransferMsg, ExecuteSendMsg, ExecuteBurnMsg, ExecuteMintMsg, ReceiveMsg, QueryBalanceMsg, QueryTokenInfoMsg, QueryMinterMsg, QueryBalanceResponse, QueryTokenInfoResponse, QueryMinterResponse, ExecuteSendFromMsg, ExecuteTransferFromMsg, ExecuteBurnFromMsg, ExecuteIncreaseAllowanceMsg, ExecuteDecreaseAllowanceMsg, QueryAllowanceMsg, QueryAllowanceResponse, QueryMarketingInfoMsg, QueryMarketingInfoResponse } from "./msg";
+import { InstantiateMsg, ExecuteMsg, QueryMsg, ExecuteTransferMsg, ExecuteSendMsg, ExecuteBurnMsg, ExecuteMintMsg, ReceiveMsg, QueryBalanceMsg, QueryTokenInfoMsg, QueryMinterMsg, QueryBalanceResponse, QueryTokenInfoResponse, QueryMinterResponse, ExecuteSendFromMsg, ExecuteTransferFromMsg, ExecuteBurnFromMsg, ExecuteIncreaseAllowanceMsg, ExecuteDecreaseAllowanceMsg, QueryAllowanceMsg, QueryAllowanceResponse, QueryMarketingInfoMsg, QueryMarketingInfoResponse, ExecuteUpdateMinterMsg, ExecuteUpdateMarketingMsg } from "./msg";
 import { ALLOWANCES, BALANCES, STATE } from "./state";
 
 function Ok<T = Response>(res: T): Result<T, string> {
@@ -58,6 +58,15 @@ export function executeFn(env: Env, info: Info, msg: ExecuteMsg): Result<Respons
 	}
 	else if (msg.decrease_allowance) {
 		return try_decrease_allowance(env, info, msg.decrease_allowance as ExecuteDecreaseAllowanceMsg);
+	}
+	else if (msg.update_minter) {
+		return try_update_minter(env, info, msg.update_minter as ExecuteUpdateMinterMsg);
+	}
+	else if (msg.update_marketing) {
+		return try_update_marketing(env, info, msg.update_marketing as ExecuteUpdateMarketingMsg);
+	}
+	else if (msg.upload_logo) {
+		return try_upload_logo(env, info, msg.upload_logo as Logo);
 	}
 	else {
 		return Err("Unknown message");
@@ -274,6 +283,65 @@ function try_decrease_allowance(env: Env, info: Info, msg: ExecuteDecreaseAllowa
 		.addAttribute('spender', msg.spender)
 		.addAttribute('amount', msg.amount.toString())
 		.addAttribute('expires', JSON.stringify<Expiration | null>(msg.expires))
+	);
+}
+
+function try_update_minter(env: Env, info: Info, msg: ExecuteUpdateMinterMsg): Result<Response, string> {
+	const newMinter = msg.new_minter !== null ? msg.new_minter as string : "";
+	const rIsMinter = isMinter(info.sender);
+	if (rIsMinter.isErr)
+		return Err<Response>(rIsMinter.unwrapErr());
+	if (!rIsMinter.unwrap())
+		return Err<Response>('unauthorized');
+	
+	const state = STATE().load().unwrap();
+	state.minter = newMinter;
+	
+	const r1 = STATE().save(state);
+	if (r1.isErr)
+		return Err<Response>(r1.unwrapErr());
+	return Ok<Response>(Response.new_()
+		.addAttribute('action', 'update_minter')
+		.addAttribute('new_minter', newMinter)
+	);
+}
+
+function try_update_marketing(env: Env, info: Info, msg: ExecuteUpdateMarketingMsg): Result<Response, string> {
+	const state = STATE().load().unwrap();
+	const newProject = msg.project !== null ? msg.project as string : state.project;
+	const newDescription = msg.description !== null ? msg.description as string : state.description;
+	const newMarketing = msg.marketing !== null ? msg.marketing as string : state.marketing;
+	
+	if (info.sender !== state.marketing)
+		return Err<Response>('unauthorized');
+	
+	state.project = newProject;
+	state.description = newDescription;
+	state.marketing = newMarketing;
+	const r1 = STATE().save(state);
+	if (r1.isErr)
+		return Err<Response>(r1.unwrapErr());
+	
+	return Ok<Response>(Response.new_()
+		.addAttribute('action', 'update_marketing')
+		.addAttribute('project', newProject)
+		.addAttribute('description', newDescription)
+		.addAttribute('marketing', newMarketing)
+	);
+}
+
+function try_upload_logo(env: Env, info: Info, logo: Logo): Result<Response, string> {
+	const state = STATE().load().unwrap();
+	if (state.marketing !== info.sender)
+		return Err<Response>('unauthorized');
+	
+	state.logo = logo;
+	const r1 = STATE().save(state);
+	if (r1.isErr)
+		return Err<Response>(r1.unwrapErr());
+	
+	return Ok<Response>(Response.new_()
+		.addAttribute('action', 'upload_logo')
 	);
 }
 

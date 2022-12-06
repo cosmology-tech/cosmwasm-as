@@ -102,23 +102,22 @@ describe("cw20-base-as", () => {
 	it("mints & burns", async () => {
 		vm.instantiate(env, info1, token1);
 		
-		vm.execute(env, info1, { mint: { recipient: info1.sender, amount: '10000' }});
-		vm.execute(env, info1, { burn: { amount: '1000' }});
+		let res = vm.execute(env, info2, { mint: { recipient: info2.sender, amount: '10000' }});
+		expect(res.json).toHaveProperty('error');
 		
-		let res = query(vm, env, { balance: { address: info1.sender }});
+		vm.execute(env, info1, { mint: { recipient: info1.sender, amount: '10000' }});
+		vm.execute(env, info1, { mint: { recipient: info2.sender, amount: '1000' }});
+		vm.execute(env, info1, { burn: { amount: '1000' }});
+		vm.execute(env, info2, { burn: { amount: '100' }});
+		
+		res = query(vm, env, { balance: { address: info1.sender }});
 		expect(res).toMatchObject({
 			balance: 9000,
 		});
-	});
-	
-	it("enforces mint authority", async () => {
-		vm.instantiate(env, info1, token1);
 		
-		vm.execute(env, info2, { mint: { recipient: info2.sender, amount: '10000' }});
-		
-		let res = query(vm, env, { balance: { address: info2.sender }});
+		res = query(vm, env, { balance: { address: info2.sender }});
 		expect(res).toMatchObject({
-			balance: 0,
+			balance: 900,
 		});
 	});
 	
@@ -187,15 +186,64 @@ describe("cw20-base-as", () => {
 		expect(res.json).toHaveProperty('error');
 	});
 	
-	it.todo("updates minter");
-	
-	it.todo("updates marketing");
-	
-	// TODO
-	it.skip("uploads url logo", async () => {
+	it("updates minter", async () => {
 		vm.instantiate(env, info1, token1);
 		
-		vm.execute(env, info1, { })
+		let res = vm.execute(env, info2, { update_minter: { new_minter: info2.sender } });
+		expect(res.json).toHaveProperty('error');
+		
+		vm.execute(env, info1, { update_minter: { new_minter: info2.sender } });
+		
+		res = query(vm, env, { minter: {} });
+		expect(res).toMatchObject({
+			minter: info2.sender
+		});
+	});
+	
+	it("updates marketing", async () => {
+		vm.instantiate(env, info1, token1);
+		
+		let res = vm.execute(env, info2, { update_marketing: { project: 'foobar' }});
+		expect(res.json).toHaveProperty('error');
+		
+		res = vm.execute(env, info1, { update_marketing: {
+			project: 'https://testtoken.fi',
+			marketing: info2.sender,
+		}});
+		console.log(res.json)
+		
+		res = query(vm, env, { marketing_info: {} });
+		expect(res).toMatchObject({
+			project: 'https://testtoken.fi',
+			description: '',
+			logo: null,
+			marketing: info2.sender,
+		});
+		
+		vm.execute(env, info2, { update_marketing: {
+			description: 'Official TestToken Project',
+		}});
+		
+		res = query(vm, env, { marketing_info: {} });
+		expect(res).toMatchObject({
+			project: 'https://testtoken.fi',
+			description: 'Official TestToken Project',
+			logo: null,
+			marketing: info2.sender,
+		});
+	});
+	
+	it("uploads url logo", async () => {
+		vm.instantiate(env, info1, token1);
+		
+		vm.execute(env, info1, { upload_logo: { url: 'https://test2.token.fi/logo.png' }});
+		let res = vm.execute(env, info2, { upload_logo: { url: 'hijacked' }});
+		expect(res.json).toHaveProperty('error');
+		
+		res = query(vm, env, { marketing_info: {} });
+		expect(res).toMatchObject({
+			logo: { url: 'https://test2.token.fi/logo.png' },
+		});
 	});
 	
 	it.todo("uploads embedded logo");

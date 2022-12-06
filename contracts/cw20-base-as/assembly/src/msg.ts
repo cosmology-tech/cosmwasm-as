@@ -1,7 +1,7 @@
 import { Binary } from "@cosmwasm-as/std";
 import { JSON } from "json-as/assembly";
 import { Expiration } from "./expiration";
-import { LogoInfo } from "./logo";
+import { Logo, LogoInfo } from "./logo";
 
 // ===== Instantiate =====
 @json
@@ -76,6 +76,18 @@ export class ExecuteDecreaseAllowanceMsg {
 }
 
 @json
+export class ExecuteUpdateMinterMsg {
+	new_minter: string | null;
+}
+
+@json
+export class ExecuteUpdateMarketingMsg {
+	project: string | null;
+	description: string | null;
+	marketing: string | null;
+}
+
+@json
 export class ExecuteMsg {
 	transfer: ExecuteTransferMsg | null;
 	transfer_from: ExecuteTransferFromMsg | null;
@@ -86,6 +98,9 @@ export class ExecuteMsg {
 	burn_from: ExecuteBurnFromMsg | null;
 	increase_allowance: ExecuteIncreaseAllowanceMsg | null;
 	decrease_allowance: ExecuteDecreaseAllowanceMsg | null;
+	update_minter: ExecuteUpdateMinterMsg | null;
+	update_marketing: ExecuteUpdateMarketingMsg | null;
+	upload_logo: Logo | null;
 }
 
 // ===== Query =====
