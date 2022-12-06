@@ -12,6 +12,9 @@ export class Storage {
 
 		let res = db_read(rKey.ptr);
 		let rRes = Region.fromPtr(res);
+		let data = rRes.read();
+		if (memcmp(data, new Uint8Array(8)) === 0)
+			return Option.None<Uint8Array>();
 		return Option.Some<Uint8Array>(rRes.read());
 	}
 
@@ -98,4 +101,20 @@ export class Map<K, V> extends StorageHelper {
 		let value = JSON.parse<V>(String.UTF8.decode(valueBuffer.unwrap().buffer));
 		return Result.Ok<V, string>(value);
 	}
+}
+
+function memcmp(lhs: Uint8Array, rhs: Uint8Array): i32 {
+	for (let i = 0; i < Math.min(lhs.length, rhs.length); ++i) {
+		const diff = lhs[i] - rhs[i];
+		if (diff !== 0) {
+			return diff;
+		}
+	}
+	if (lhs.length < rhs.length) {
+		return -rhs[lhs.length];
+	}
+	if (lhs.length > rhs.length) {
+		return  lhs[rhs.length];
+	}
+	return 0;
 }
